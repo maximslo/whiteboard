@@ -40,15 +40,15 @@ let userCount = 0;
 let history = [];
 
 // Load history from Firebase at startup
-historyRef.once("value", (snapshot) => {
-  const data = snapshot.val();
-  if (data) {
-    history = data;
-    console.log(`✅ Loaded ${history.length} history items from Firebase`);
-  } else {
-    console.log("ℹ️ No history in Firebase yet");
-  }
-});
+// historyRef.once("value", (snapshot) => {
+//   const data = snapshot.val();
+//   if (data) {
+//     history = data;
+//     console.log(`✅ Loaded ${history.length} history items from Firebase`);
+//   } else {
+//     console.log("ℹ️ No history in Firebase yet");
+//   }
+// });
 
 io.on("connection", (socket) => {
   userCount++;
