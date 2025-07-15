@@ -1,7 +1,6 @@
 import { createServer } from "http";
 import { Server } from "socket.io";
 import admin from "firebase-admin";
-import fs from "fs";
 import express from "express";
 import cors from "cors";
 
