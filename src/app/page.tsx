@@ -10,7 +10,7 @@ export default function Home() {
   const [users, setUsers] = useState(1);
 
   useEffect(() => {
-    const socket = io('http://localhost:3001');
+    const socket = io('https://whiteboard-ub4v.onrender.com');
     socket.on('users', (count: number) => {
       setUsers(count);
     });
