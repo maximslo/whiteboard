@@ -45,13 +45,16 @@ io.on("connection", (socket) => {
   // send history to new client
   history.forEach((data) => socket.emit("draw", data));
 
-  socket.on("draw", (data) => {
+  socket.on('draw', (data) => {
     history.push(data);
-    socket.broadcast.emit("draw", data);
-
-    // save to firebase
-    historyRef.set(history).catch(console.error);
+    socket.broadcast.emit('draw', data);
+  
+    console.log(`📝 Writing history to Firebase (${history.length} items)…`);
+    historyRef.set(history)
+      .then(() => console.log('✅ Firebase write complete'))
+      .catch(err => console.error('🔥 Firebase write failed', err));
   });
+  
 
   socket.on("disconnect", () => {
     userCount--;
