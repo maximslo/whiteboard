@@ -18,9 +18,9 @@ const historyRef = db.ref("history");
 const httpServer = createServer();
 const io = new Server(httpServer, {
   cors: {
-    origin: "*", // for testing — in production you can set to your domain only
-    methods: ["GET", "POST"],
-  },
+    origin: ["https://whiteboard-eosin-one.vercel.app", "http://localhost:3000"],
+    methods: ["GET", "POST"]
+  }
 });
 
 let userCount = 0;
