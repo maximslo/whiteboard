@@ -2,6 +2,8 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import admin from "firebase-admin";
 import fs from "fs";
+import express from "express";
+import cors from "cors";
 
 // initialize firebase
 // const serviceAccount = JSON.parse(fs.readFileSync('./whiteboard-c8704-firebase-adminsdk-fbsvc-fb36e0ad0f.json', 'utf-8'));
@@ -15,13 +17,25 @@ admin.initializeApp({
 const db = admin.database();
 const historyRef = db.ref("history");
 
-const httpServer = createServer();
+// express app
+const app = express();
+app.use(cors({ origin: "https://whiteboard-eosin-one.vercel.app" }));
+
+const httpServer = createServer(app);
+
 const io = new Server(httpServer, {
   cors: {
-    origin: ["https://whiteboard-eosin-one.vercel.app", "http://localhost:3000"],
+    origin: "https://whiteboard-eosin-one.vercel.app",
     methods: ["GET", "POST"]
   }
 });
+// const httpServer = createServer();
+// const io = new Server(httpServer, {
+//   cors: {
+//     origin: ["https://whiteboard-eosin-one.vercel.app", "http://localhost:3000"],
+//     methods: ["GET", "POST"]
+//   }
+// });
 
 let userCount = 0;
 let history = [];
@@ -63,6 +77,7 @@ io.on("connection", (socket) => {
   });
 });
 
-httpServer.listen(3001, () => {
-  console.log("🚀 Socket.IO server running at http://localhost:3001/");
+const PORT = process.env.PORT || 3001;
+httpServer.listen(PORT, () => {
+  console.log(`🚀 Socket.IO server running at http://localhost:${PORT}/`);
 });
