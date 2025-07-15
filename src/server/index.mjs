@@ -4,7 +4,8 @@ import admin from 'firebase-admin';
 import fs from 'fs';
 
 // initialize firebase
-const serviceAccount = JSON.parse(fs.readFileSync('./whiteboard-c8704-firebase-adminsdk-fbsvc-fb36e0ad0f.json', 'utf-8'));
+// const serviceAccount = JSON.parse(fs.readFileSync('./whiteboard-c8704-firebase-adminsdk-fbsvc-fb36e0ad0f.json', 'utf-8'));
+const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
