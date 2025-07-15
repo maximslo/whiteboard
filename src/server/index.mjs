@@ -83,6 +83,6 @@ app.get('/', (req, res) => {
   res.send('✅ Whiteboard Socket.IO server is alive!');
 });
 
-httpServer.listen(PORT, () => {
-  console.log(`🚀 Socket.IO server running at http://localhost:${PORT}/`);
+httpServer.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Socket.IO server running at http://0.0.0.0:${PORT}/`);
 });
