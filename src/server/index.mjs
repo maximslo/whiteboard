@@ -76,7 +76,13 @@ io.on("connection", (socket) => {
   });
 });
 
+
 const PORT = process.env.PORT || 3001;
+
+app.get('/', (req, res) => {
+  res.send('✅ Whiteboard Socket.IO server is alive!');
+});
+
 httpServer.listen(PORT, () => {
   console.log(`🚀 Socket.IO server running at http://localhost:${PORT}/`);
 });
