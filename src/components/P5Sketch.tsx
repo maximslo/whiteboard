@@ -23,10 +23,18 @@ export default function P5Sketch() {
 
     const sketch = (p: p5) => {
       p.setup = () => {
-        const cnv = p.createCanvas(600, 400);
+        const menuHeight = 50; // adjust if your menu is taller
+        const border = 2;
+
+        const canvasWidth = window.innerWidth - border * 2;
+        const canvasHeight = window.innerHeight - menuHeight - border * 2;
+
+        const cnv = p.createCanvas(canvasWidth, canvasHeight);
+
         cnv.parent(container!);
         cnv.style('border', '2px solid blue');
         cnv.style('box-sizing', 'border-box');
+
         p.background(255);
         p.stroke(0);
       };
@@ -70,5 +78,10 @@ export default function P5Sketch() {
     };
   }, []);
 
-  return <div ref={containerRef} />;
+  return (
+    <div
+      ref={containerRef}
+      style={{ flex: 1 }}
+    />
+  );
 }
