@@ -39,14 +39,13 @@ io.on("connection", (socket) => {
   console.log(`✅ User connected: ${socket.id} — Total: ${userCount}`);
   io.emit("users", userCount);
 
-  // Fetch history from Firebase on *every connection*
+  // send all history at once
   historyRef.once("value").then((snapshot) => {
     const history = snapshot.val() || [];
-    history.forEach((data) => socket.emit("draw", data));
+    socket.emit("history", history);
   });
 
   socket.on("draw", (data) => {
-    // Save to Firebase *and* broadcast
     historyRef.once("value").then((snapshot) => {
       const history = snapshot.val() || [];
       history.push(data);

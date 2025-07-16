@@ -64,10 +64,19 @@ export default function P5Sketch() {
       p5InstanceRef.current = new p5(sketch, container);
     }
 
-    socket.on('draw', (data: LineData) => {
+    socket.on("history", (lines: LineData[]) => {
+      if (!p5InstanceRef.current) return;
+    
+      p5InstanceRef.current.background(255);
+    
+      for (const data of lines) {
+        p5InstanceRef.current.line(data.x1, data.y1, data.x2, data.y2);
+      }
+    });
+    
+    socket.on("draw", (data: LineData) => {
       p5InstanceRef.current?.line(
-        data.x1, data.y1,
-        data.x2, data.y2
+        data.x1, data.y1, data.x2, data.y2
       );
     });
 
