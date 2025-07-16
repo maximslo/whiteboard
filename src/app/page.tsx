@@ -41,7 +41,7 @@ export default function Home() {
           fontFamily: `'Inter', sans-serif`
         }}
       >
-        {users}/4 beautiful men are currently online
+        {users/2}/4 beautiful men are currently online
       </div>
 
       <div
