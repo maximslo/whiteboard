@@ -16,7 +16,7 @@
 
 # Firebase credentials (never commit)
 /serviceAccountKey.json
-.whiteboard-c8704-firebase-adminsdk-fbsvc-fb36e0ad0f.json
+whiteboard-c8704-firebase-adminsdk-fbsvc-fb36e0ad0f.json
 
 # environment & secrets
 .env*
