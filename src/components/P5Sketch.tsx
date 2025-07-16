@@ -18,7 +18,7 @@ export default function P5Sketch() {
 
   useEffect(() => {
     const container = containerRef.current;
-    const socket = io('https://whiteboard-ub4v.onrender.com');
+    const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL!);
     socketRef.current = socket;
 
     const sketch = (p: p5) => {

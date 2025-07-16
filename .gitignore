@@ -23,6 +23,10 @@ whiteboard-c8704-firebase-adminsdk-fbsvc-fb36e0ad0f.json
 .vercel/
 /.firebase/
 
+# Local env files
+.env.local
+.env.*.local
+
 # OS & editor junk
 .DS_Store
 *.pem
