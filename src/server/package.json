@@ -1,0 +1,16 @@
+{
+    "name": "whiteboard-backend",
+    "version": "1.0.0",
+    "main": "index.mjs",
+    "type": "module",
+    "scripts": {
+      "start": "node index.mjs"
+    },
+    "dependencies": {
+      "express": "^4.19.2",
+      "socket.io": "^4.7.5",
+      "firebase-admin": "^11.11.1",
+      "cors": "^2.8.5"
+    }
+  }
+  
