@@ -4,8 +4,7 @@ import admin from "firebase-admin";
 import express from "express";
 import cors from "cors";
 
-// initialize firebase
-// const serviceAccount = JSON.parse(fs.readFileSync('./whiteboard-c8704-firebase-adminsdk-fbsvc-fb36e0ad0f.json', 'utf-8'));
+// Initialize Firebase
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 
 admin.initializeApp({
@@ -16,9 +15,13 @@ admin.initializeApp({
 const db = admin.database();
 const historyRef = db.ref("history");
 
-// express app
+// Setup Express
 const app = express();
 app.use(cors({ origin: "https://whiteboard-eosin-one.vercel.app" }));
+
+app.get("/", (_, res) => {
+  res.send("✅ Whiteboard Socket.IO server is alive!");
+});
 
 const httpServer = createServer(app);
 
@@ -28,46 +31,33 @@ const io = new Server(httpServer, {
     methods: ["GET", "POST"]
   }
 });
-// const httpServer = createServer();
-// const io = new Server(httpServer, {
-//   cors: {
-//     origin: ["https://whiteboard-eosin-one.vercel.app", "http://localhost:3000"],
-//     methods: ["GET", "POST"]
-//   }
-// });
 
 let userCount = 0;
-let history = [];
-
-// Load history from Firebase at startup
-// historyRef.once("value", (snapshot) => {
-//   const data = snapshot.val();
-//   if (data) {
-//     history = data;
-//     console.log(`✅ Loaded ${history.length} history items from Firebase`);
-//   } else {
-//     console.log("ℹ️ No history in Firebase yet");
-//   }
-// });
 
 io.on("connection", (socket) => {
   userCount++;
   console.log(`✅ User connected: ${socket.id} — Total: ${userCount}`);
   io.emit("users", userCount);
 
-  // send history to new client
-  history.forEach((data) => socket.emit("draw", data));
-
-  socket.on('draw', (data) => {
-    history.push(data);
-    socket.broadcast.emit('draw', data);
-  
-    console.log(`📝 Writing history to Firebase (${history.length} items)…`);
-    historyRef.set(history)
-      .then(() => console.log('✅ Firebase write complete'))
-      .catch(err => console.error('🔥 Firebase write failed', err));
+  // Fetch history from Firebase on *every connection*
+  historyRef.once("value").then((snapshot) => {
+    const history = snapshot.val() || [];
+    history.forEach((data) => socket.emit("draw", data));
   });
-  
+
+  socket.on("draw", (data) => {
+    // Save to Firebase *and* broadcast
+    historyRef.once("value").then((snapshot) => {
+      const history = snapshot.val() || [];
+      history.push(data);
+
+      socket.broadcast.emit("draw", data);
+
+      historyRef.set(history)
+        .then(() => console.log("✅ Firebase write complete"))
+        .catch((err) => console.error("🔥 Firebase write failed", err));
+    });
+  });
 
   socket.on("disconnect", () => {
     userCount--;
@@ -76,13 +66,8 @@ io.on("connection", (socket) => {
   });
 });
 
-
 const PORT = process.env.PORT || 3001;
 
-app.get('/', (req, res) => {
-  res.send('✅ Whiteboard Socket.IO server is alive!');
-});
-
-httpServer.listen(PORT, '0.0.0.0', () => {
+httpServer.listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 Socket.IO server running at http://0.0.0.0:${PORT}/`);
 });
