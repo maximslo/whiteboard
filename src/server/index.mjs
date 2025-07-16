@@ -34,12 +34,13 @@ const io = new Server(httpServer, {
 
 let userCount = 0;
 
+// on connection:
 io.on("connection", (socket) => {
   userCount++;
   console.log(`✅ User connected: ${socket.id} — Total: ${userCount}`);
   io.emit("users", userCount);
 
-  // send all history at once
+  // ✅ send history ONCE as a single event
   historyRef.once("value").then((snapshot) => {
     const history = snapshot.val() || [];
     socket.emit("history", history);

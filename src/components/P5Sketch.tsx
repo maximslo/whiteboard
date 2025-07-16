@@ -15,6 +15,7 @@ export default function P5Sketch() {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const p5InstanceRef = useRef<p5 | null>(null);
   const socketRef = useRef<ReturnType<typeof io> | null>(null);
+  const hasDrawnHistory = useRef(false);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -23,7 +24,7 @@ export default function P5Sketch() {
 
     const sketch = (p: p5) => {
       p.setup = () => {
-        const menuHeight = 50; // adjust if your menu is taller
+        const menuHeight = 50;
         const border = 2;
 
         const canvasWidth = window.innerWidth - border * 2;
@@ -65,15 +66,17 @@ export default function P5Sketch() {
     }
 
     socket.on("history", (lines: LineData[]) => {
-      if (!p5InstanceRef.current) return;
-    
+      if (!p5InstanceRef.current || hasDrawnHistory.current) return;
+
+      hasDrawnHistory.current = true;
+
       p5InstanceRef.current.background(255);
-    
+
       for (const data of lines) {
         p5InstanceRef.current.line(data.x1, data.y1, data.x2, data.y2);
       }
     });
-    
+
     socket.on("draw", (data: LineData) => {
       p5InstanceRef.current?.line(
         data.x1, data.y1, data.x2, data.y2
