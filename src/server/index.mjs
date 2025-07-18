@@ -4,7 +4,7 @@ import admin from "firebase-admin";
 import express from "express";
 import cors from "cors";
 
-// Initialize Firebase
+// 🔗 Initialize Firebase
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 
 admin.initializeApp({
@@ -15,7 +15,7 @@ admin.initializeApp({
 const db = admin.database();
 const historyRef = db.ref("history");
 
-// Setup Express
+// 🛠️ Setup Express
 const app = express();
 app.use(cors({ origin: "https://whiteboard-eosin-one.vercel.app" }));
 
@@ -34,29 +34,32 @@ const io = new Server(httpServer, {
 
 let userCount = 0;
 
-// on connection:
 io.on("connection", (socket) => {
   userCount++;
   console.log(`✅ User connected: ${socket.id} — Total: ${userCount}`);
   io.emit("users", userCount);
 
-  // ✅ send history ONCE as a single event
+  // send full history when a client connects
   historyRef.once("value").then((snapshot) => {
-    const history = snapshot.val() || [];
+    const val = snapshot.val() || {};
+    const history = Object.values(val);
     socket.emit("history", history);
   });
 
+  // handle incoming draw events
   socket.on("draw", (data) => {
-    historyRef.once("value").then((snapshot) => {
-      const history = snapshot.val() || [];
-      history.push(data);
+    // broadcast to others
+    socket.broadcast.emit("draw", data);
 
-      socket.broadcast.emit("draw", data);
-
-      historyRef.set(history)
-        .then(() => console.log("✅ Firebase write complete"))
-        .catch((err) => console.error("🔥 Firebase write failed", err));
-    });
+    // just append to Firebase
+    historyRef.push(data)
+      .then(() => {
+        // optionally log
+        console.log("✅ Segment written to Firebase");
+      })
+      .catch((err) => {
+        console.error("🔥 Failed to write to Firebase:", err);
+      });
   });
 
   socket.on("disconnect", () => {
