@@ -19,6 +19,7 @@ export default function P5Sketch() {
   const hasDrawnHistory = useRef(false);
   const historyQueueRef = useRef<LineData[]>([]);
   const isTouching = useRef(false);
+  const isNewStroke = useRef(true);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -57,8 +58,17 @@ export default function P5Sketch() {
           }
         }
 
-        // Handle live drawing
+        // Live drawing
         if (p.mouseIsPressed || isTouching.current) {
+          if (isNewStroke.current) {
+            // On first frame of a new stroke, reset pmouse
+            if (isValidCoord(p.mouseX, p.mouseY)) {
+              p.pmouseX = p.mouseX;
+              p.pmouseY = p.mouseY;
+            }
+            isNewStroke.current = false;
+          }
+
           if (
             isValidCoord(p.pmouseX, p.pmouseY) &&
             isValidCoord(p.mouseX, p.mouseY)
@@ -72,21 +82,24 @@ export default function P5Sketch() {
             p.line(lineData.x1, lineData.y1, lineData.x2, lineData.y2);
             socket.emit('draw', lineData);
           }
+        } else {
+          // Stroke ended — reset flag
+          isNewStroke.current = true;
         }
       };
 
-      // 🖊️ explicitly track touch start/end
+      // Track touch events explicitly
       p.touchStarted = () => {
         isTouching.current = true;
-        return false; // prevent scrolling
+        return false; // prevent scroll
       };
 
       p.touchEnded = () => {
         isTouching.current = false;
-        return false; // prevent scrolling
+        return false; // prevent scroll
       };
 
-      // 🎧 Listen for incoming events
+      // History and socket events
       socket.on("history", (lines: LineData[]) => {
         if (!p5InstanceRef.current || hasDrawnHistory.current) return;
 
