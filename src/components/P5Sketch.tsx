@@ -212,7 +212,6 @@ export default function P5Sketch() {
           display: 'flex',
           alignItems: 'flex-start',
           justifyContent: 'flex-start',
-          padding: '1rem',
         }}
       >
         <div ref={containerRef} />
