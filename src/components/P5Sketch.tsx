@@ -15,7 +15,9 @@ export default function P5Sketch() {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const p5InstanceRef = useRef<p5 | null>(null);
   const socketRef = useRef<ReturnType<typeof io> | null>(null);
+
   const hasDrawnHistory = useRef(false);
+  const historyQueueRef = useRef<LineData[]>([]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -41,6 +43,16 @@ export default function P5Sketch() {
       };
 
       p.draw = () => {
+        // Replay history incrementally
+        if (historyQueueRef.current.length) {
+          const batchSize = 5; // adjust for speed/smoothness
+          for (let i = 0; i < batchSize && historyQueueRef.current.length; i++) {
+            const data = historyQueueRef.current.shift()!;
+            p.line(data.x1, data.y1, data.x2, data.y2);
+          }
+        }
+
+        // Handle live drawing
         if (p.mouseIsPressed) {
           const lineData: LineData = {
             x1: p.pmouseX,
@@ -70,11 +82,10 @@ export default function P5Sketch() {
 
       hasDrawnHistory.current = true;
 
-      p5InstanceRef.current.background(255);
+      const pInst = p5InstanceRef.current;
+      pInst.background(255);
 
-      for (const data of lines) {
-        p5InstanceRef.current.line(data.x1, data.y1, data.x2, data.y2);
-      }
+      historyQueueRef.current = [...lines];
     });
 
     socket.on("draw", (data: LineData) => {
