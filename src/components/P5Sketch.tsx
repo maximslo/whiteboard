@@ -25,6 +25,28 @@ export default function P5Sketch() {
     socketRef.current = socket;
 
     const sketch = (p: p5) => {
+      // 🖊️ DRY: Interpolation helper
+      const drawInterpolatedLine = (data: LineData) => {
+        const dx = data.x2 - data.x1;
+        const dy = data.y2 - data.y1;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const step = 2;
+
+        if (dist === 0) {
+          p.point(data.x1, data.y1);
+          return;
+        }
+
+        for (let i = 0; i <= dist; i += step) {
+          const t = i / dist;
+          const x = data.x1 + t * dx;
+          const y = data.y1 + t * dy;
+          p.point(x, y);
+        }
+
+        p.point(data.x2, data.y2);
+      };
+
       p.setup = () => {
         const menuHeight = 50;
         const border = 2;
@@ -43,16 +65,16 @@ export default function P5Sketch() {
       };
 
       p.draw = () => {
-        // Replay history incrementally
+        // 🔁 Replay history incrementally
         if (historyQueueRef.current.length) {
-          const batchSize = 5; // adjust for speed/smoothness
+          const batchSize = 5;
           for (let i = 0; i < batchSize && historyQueueRef.current.length; i++) {
             const data = historyQueueRef.current.shift()!;
-            p.line(data.x1, data.y1, data.x2, data.y2);
+            drawInterpolatedLine(data);
           }
         }
 
-        // Handle live drawing
+        // 🎨 Live drawing
         if (p.mouseIsPressed) {
           const lineData: LineData = {
             x1: p.pmouseX,
@@ -60,10 +82,26 @@ export default function P5Sketch() {
             x2: p.mouseX,
             y2: p.mouseY,
           };
-          p.line(lineData.x1, lineData.y1, lineData.x2, lineData.y2);
+          drawInterpolatedLine(lineData);
           socket.emit('draw', lineData);
         }
       };
+
+      // 🎧 Listen for incoming 'draw' events and history
+      socket.on("history", (lines: LineData[]) => {
+        if (!p5InstanceRef.current || hasDrawnHistory.current) return;
+
+        hasDrawnHistory.current = true;
+
+        const pInst = p5InstanceRef.current;
+        pInst.background(255);
+
+        historyQueueRef.current = [...lines];
+      });
+
+      socket.on("draw", (data: LineData) => {
+        drawInterpolatedLine(data);
+      });
     };
 
     if (container) {
@@ -76,23 +114,6 @@ export default function P5Sketch() {
 
       p5InstanceRef.current = new p5(sketch, container);
     }
-
-    socket.on("history", (lines: LineData[]) => {
-      if (!p5InstanceRef.current || hasDrawnHistory.current) return;
-
-      hasDrawnHistory.current = true;
-
-      const pInst = p5InstanceRef.current;
-      pInst.background(255);
-
-      historyQueueRef.current = [...lines];
-    });
-
-    socket.on("draw", (data: LineData) => {
-      p5InstanceRef.current?.line(
-        data.x1, data.y1, data.x2, data.y2
-      );
-    });
 
     return () => {
       socket.disconnect();
