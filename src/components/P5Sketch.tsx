@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import p5 from 'p5';
 import io from 'socket.io-client';
 
@@ -9,6 +9,7 @@ type LineData = {
   y1: number;
   x2: number;
   y2: number;
+  tool: 'pencil' | 'eraser';
 };
 
 export default function P5Sketch() {
@@ -21,6 +22,8 @@ export default function P5Sketch() {
   const isTouching = useRef(false);
   const isNewStroke = useRef(true);
 
+  const [currentTool, setCurrentTool] = useState<'pencil' | 'eraser'>('pencil');
+
   useEffect(() => {
     const container = containerRef.current;
     const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL!);
@@ -29,6 +32,16 @@ export default function P5Sketch() {
     const sketch = (p: p5) => {
       const isValidCoord = (x: number, y: number) => {
         return Number.isFinite(x) && Number.isFinite(y) && x >= 0 && y >= 0;
+      };
+
+      const applyTool = (tool: 'pencil' | 'eraser') => {
+        if (tool === 'pencil') {
+          p.stroke(0);
+          p.strokeWeight(1);
+        } else {
+          p.stroke(255);
+          p.strokeWeight(10);
+        }
       };
 
       p.setup = () => {
@@ -45,7 +58,6 @@ export default function P5Sketch() {
         cnv.style('box-sizing', 'border-box');
 
         p.background(255);
-        p.stroke(0);
       };
 
       p.draw = () => {
@@ -54,14 +66,13 @@ export default function P5Sketch() {
           const batchSize = 5;
           for (let i = 0; i < batchSize && historyQueueRef.current.length; i++) {
             const data = historyQueueRef.current.shift()!;
+            applyTool(data.tool);
             p.line(data.x1, data.y1, data.x2, data.y2);
           }
         }
 
-        // Live drawing
         if (p.mouseIsPressed || isTouching.current) {
           if (isNewStroke.current) {
-            // On first frame of a new stroke, reset pmouse
             if (isValidCoord(p.mouseX, p.mouseY)) {
               p.pmouseX = p.mouseX;
               p.pmouseY = p.mouseY;
@@ -78,28 +89,28 @@ export default function P5Sketch() {
               y1: p.pmouseY,
               x2: p.mouseX,
               y2: p.mouseY,
+              tool: currentTool,
             };
+            applyTool(lineData.tool);
             p.line(lineData.x1, lineData.y1, lineData.x2, lineData.y2);
             socket.emit('draw', lineData);
           }
+
         } else {
-          // Stroke ended — reset flag
           isNewStroke.current = true;
         }
       };
 
-      // Track touch events explicitly
       p.touchStarted = () => {
         isTouching.current = true;
-        return false; // prevent scroll
+        return false;
       };
 
       p.touchEnded = () => {
         isTouching.current = false;
-        return false; // prevent scroll
+        return false;
       };
 
-      // History and socket events
       socket.on("history", (lines: LineData[]) => {
         if (!p5InstanceRef.current || hasDrawnHistory.current) return;
 
@@ -116,6 +127,7 @@ export default function P5Sketch() {
           isValidCoord(data.x1, data.y1) &&
           isValidCoord(data.x2, data.y2)
         ) {
+          applyTool(data.tool);
           p.line(data.x1, data.y1, data.x2, data.y2);
         }
       });
@@ -137,12 +149,64 @@ export default function P5Sketch() {
       p5InstanceRef.current?.remove();
       if (container) container.innerHTML = '';
     };
-  }, []);
+  }, [currentTool]); // note: added currentTool to dependencies
 
   return (
     <div
-      ref={containerRef}
-      style={{ flex: 1 }}
-    />
+      style={{
+        height: '100vh',
+        margin: 0,
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
+      {/* Menu bar with user count + tool buttons */}
+      <div
+        style={{
+          height: '50px',
+          background: '#eee',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '0 1rem',
+          fontFamily: `'Inter', sans-serif`,
+          fontWeight: 'bold',
+          fontSize: '16px'
+        }}
+      >
+        <div>✏️ Collaborative Whiteboard</div>
+        <div>
+          <button
+            onClick={() => setCurrentTool('pencil')}
+            style={{
+              marginRight: '0.5rem',
+              padding: '0.25rem 0.5rem',
+              background: currentTool === 'pencil' ? '#ccc' : '#fff',
+              border: '1px solid #999',
+              cursor: 'pointer',
+            }}
+          >
+            Pencil
+          </button>
+          <button
+            onClick={() => setCurrentTool('eraser')}
+            style={{
+              padding: '0.25rem 0.5rem',
+              background: currentTool === 'eraser' ? '#ccc' : '#fff',
+              border: '1px solid #999',
+              cursor: 'pointer',
+            }}
+          >
+            Eraser
+          </button>
+        </div>
+      </div>
+
+      {/* Sketch canvas */}
+      <div
+        ref={containerRef}
+        style={{ flex: 1 }}
+      />
+    </div>
   );
 }
