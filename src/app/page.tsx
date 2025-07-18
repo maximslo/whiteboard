@@ -38,7 +38,7 @@ export default function Home() {
         background: '#f7f7f7',
         borderBottom: '1px solid #ddd'
       }}>
-        👥 {users} beautiful {users !== 1 ? 'men' : 'man'} online
+        👥 {users/2} beautiful {users !== 1 ? 'men' : 'man'} online
       </div>
 
       <div style={{ flex: 1 }}>

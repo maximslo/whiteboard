@@ -17,7 +17,7 @@ const historyRef = db.ref("history");
 
 // 🛠️ Setup Express
 const app = express();
-app.use(cors({ origin: "https://whiteboard-eosin-one.vercel.app" }));
+app.use(cors({ origin: "https://whiteboard-502.vercel.app" }));
 
 app.get("/", (_, res) => {
   res.send("✅ Whiteboard Socket.IO server is alive!");
@@ -27,7 +27,7 @@ const httpServer = createServer(app);
 
 const io = new Server(httpServer, {
   cors: {
-    origin: "https://whiteboard-eosin-one.vercel.app",
+    origin: "https://whiteboard-502.vercel.app",
     methods: ["GET", "POST"]
   }
 });
