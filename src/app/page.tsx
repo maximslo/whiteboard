@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import io from 'socket.io-client';
 
-// Lazy-load P5Sketch because it uses window & p5
 const P5Sketch = dynamic(() => import('../components/P5Sketch'), { ssr: false });
 
 export default function Home() {
@@ -31,8 +30,6 @@ export default function Home() {
         flexDirection: 'column',
       }}
     >
-      {/* You already have a menu bar in P5Sketch */}
-      {/* So here you can optionally show users below or leave it out */}
       <div style={{
         textAlign: 'center',
         fontSize: '14px',
@@ -41,7 +38,7 @@ export default function Home() {
         background: '#f7f7f7',
         borderBottom: '1px solid #ddd'
       }}>
-        👥 {users} user{users !== 1 ? 's' : ''} online
+        👥 {users/2} beautiful {users !== 1 ? 'men' : 'man'} online
       </div>
 
       <div style={{ flex: 1 }}>

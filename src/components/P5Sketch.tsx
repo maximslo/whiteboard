@@ -25,7 +25,6 @@ export default function P5Sketch() {
   const [toolState, setToolState] = useState<'pencil' | 'eraser'>('pencil');
   const currentTool = useRef<'pencil' | 'eraser'>('pencil');
 
-  // keep currentTool in sync with React state
   useEffect(() => {
     currentTool.current = toolState;
   }, [toolState]);
@@ -51,11 +50,8 @@ export default function P5Sketch() {
       };
 
       p.setup = () => {
-        const menuHeight = 50;
-        const border = 2;
-
-        const canvasWidth = window.innerWidth - border * 2;
-        const canvasHeight = window.innerHeight - menuHeight - border * 2;
+        const canvasWidth = 390;  // iPhone 13 width
+        const canvasHeight = 844; // iPhone 13 height
 
         const cnv = p.createCanvas(canvasWidth, canvasHeight);
 
@@ -67,7 +63,6 @@ export default function P5Sketch() {
       };
 
       p.draw = () => {
-        // Replay history incrementally
         if (historyQueueRef.current.length) {
           const batchSize = 5;
           for (let i = 0; i < batchSize && historyQueueRef.current.length; i++) {
@@ -77,7 +72,6 @@ export default function P5Sketch() {
           }
         }
 
-        // Live drawing
         if (p.mouseIsPressed || isTouching.current) {
           if (isNewStroke.current) {
             if (isValidCoord(p.mouseX, p.mouseY)) {
@@ -157,7 +151,7 @@ export default function P5Sketch() {
       p5InstanceRef.current?.remove();
       if (container) container.innerHTML = '';
     };
-  }, []); // 👈 removed currentTool from deps
+  }, []);
 
   return (
     <div
@@ -168,7 +162,6 @@ export default function P5Sketch() {
         flexDirection: 'column',
       }}
     >
-      {/* Menu bar with tool buttons */}
       <div
         style={{
           height: '50px',
@@ -182,7 +175,7 @@ export default function P5Sketch() {
           fontSize: '16px'
         }}
       >
-        <div>✏️ Room 502</div>
+        <div>✏️ 502 Whiteboard</div>
         <div>
           <button
             onClick={() => setToolState('pencil')}
@@ -212,7 +205,12 @@ export default function P5Sketch() {
 
       <div
         ref={containerRef}
-        style={{ flex: 1 }}
+        style={{
+          flex: 1,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
       />
     </div>
   );
