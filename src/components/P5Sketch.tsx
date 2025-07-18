@@ -25,8 +25,6 @@ export default function P5Sketch() {
   const [toolState, setToolState] = useState<'pencil' | 'eraser'>('pencil');
   const currentTool = useRef<'pencil' | 'eraser'>('pencil');
 
-  const [isReplaying, setIsReplaying] = useState(true);
-
   useEffect(() => {
     currentTool.current = toolState;
   }, [toolState]);
@@ -52,27 +50,19 @@ export default function P5Sketch() {
       };
 
       p.setup = () => {
-        const canvasWidth = 390;
-        const canvasHeight = 644;
-
-        p.pixelDensity(1);  // crucial for consistent size on all screens
+        const canvasWidth = 390;  // iPhone 13 width
+        const canvasHeight = 844; // iPhone 13 height
 
         const cnv = p.createCanvas(canvasWidth, canvasHeight);
 
         cnv.parent(container!);
-        cnv.style('width', `${canvasWidth}px`);
-        cnv.style('height', `${canvasHeight}px`);
         cnv.style('border', '2px solid blue');
-        cnv.style('box-sizing', 'content-box');
+        cnv.style('box-sizing', 'border-box');
 
         p.background(255);
       };
 
       p.draw = () => {
-        if (isReplaying && historyQueueRef.current.length === 0) {
-          setIsReplaying(false);
-        }
-
         if (historyQueueRef.current.length) {
           const batchSize = 5;
           for (let i = 0; i < batchSize && historyQueueRef.current.length; i++) {
@@ -82,7 +72,7 @@ export default function P5Sketch() {
           }
         }
 
-        if (!isReplaying && (p.mouseIsPressed || isTouching.current)) {
+        if (p.mouseIsPressed || isTouching.current) {
           if (isNewStroke.current) {
             if (isValidCoord(p.mouseX, p.mouseY)) {
               p.pmouseX = p.mouseX;
@@ -132,7 +122,6 @@ export default function P5Sketch() {
         pInst.background(255);
 
         historyQueueRef.current = [...lines];
-        setIsReplaying(lines.length > 0);
       });
 
       socket.on("draw", (data: LineData) => {
@@ -196,7 +185,7 @@ export default function P5Sketch() {
               padding: '0.25rem 0.5rem',
               background: toolState === 'pencil' ? '#ccc' : '#fff',
               border: '1px solid #999',
-              cursor: 'crosshair',
+              cursor: 'pointer',
             }}
           >
             Pencil
@@ -225,49 +214,7 @@ export default function P5Sketch() {
           justifyContent: 'flex-start',
         }}
       >
-        <div
-          style={{
-            position: 'relative',
-            width: '390px',
-            height: '644px',
-          }}
-        >
-          <div ref={containerRef} />
-
-          {isReplaying && (
-            <div
-              style={{
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                background: 'rgba(255, 255, 255, 0.7)',
-                padding: '1rem',
-                borderRadius: '50%',
-                zIndex: 10,
-              }}
-            >
-              <div
-                style={{
-                  width: '40px',
-                  height: '40px',
-                  border: '4px solid #ccc',
-                  borderTop: '4px solid #333',
-                  borderRadius: '50%',
-                  animation: 'spin 1s linear infinite',
-                }}
-              />
-              <style>
-                {`
-                  @keyframes spin {
-                    0% { transform: rotate(0deg); }
-                    100% { transform: rotate(360deg); }
-                  }
-                `}
-              </style>
-            </div>
-          )}
-        </div>
+        <div ref={containerRef} />
       </div>
     </div>
   );
