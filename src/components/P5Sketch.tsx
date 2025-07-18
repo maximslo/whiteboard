@@ -51,7 +51,7 @@ export default function P5Sketch() {
 
       p.setup = () => {
         const canvasWidth = 390;  // iPhone 13 width
-        const canvasHeight = 844; // iPhone 13 height
+        const canvasHeight = 644; // iPhone 13 height
 
         const cnv = p.createCanvas(canvasWidth, canvasHeight);
 
@@ -196,7 +196,7 @@ export default function P5Sketch() {
               padding: '0.25rem 0.5rem',
               background: toolState === 'eraser' ? '#ccc' : '#fff',
               border: '1px solid #999',
-              cursor: 'crosshair',
+              cursor: 'pointer',
             }}
           >
             Eraser
@@ -212,6 +212,7 @@ export default function P5Sketch() {
           display: 'flex',
           alignItems: 'flex-start',
           justifyContent: 'flex-start',
+          cursor:'crosshair'
         }}
       >
         <div ref={containerRef} />
