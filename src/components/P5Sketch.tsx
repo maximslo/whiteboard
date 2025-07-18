@@ -19,6 +19,10 @@ export default function P5Sketch() {
   const hasDrawnHistory = useRef(false);
   const historyQueueRef = useRef<LineData[]>([]);
 
+  // new: hold all segments of the current stroke
+  const currentStroke = useRef<LineData[]>([]);
+  const isDrawing = useRef(false);
+
   useEffect(() => {
     const container = containerRef.current;
     const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL!);
@@ -40,28 +44,44 @@ export default function P5Sketch() {
 
         p.background(255);
         p.stroke(0);
+
+        // optional: increase frame rate for smoother sampling
+        p.frameRate(120);
       };
 
       p.draw = () => {
         // Replay history incrementally
         if (historyQueueRef.current.length) {
-          const batchSize = 5; // adjust for speed/smoothness
+          const batchSize = 5;
           for (let i = 0; i < batchSize && historyQueueRef.current.length; i++) {
             const data = historyQueueRef.current.shift()!;
             p.line(data.x1, data.y1, data.x2, data.y2);
           }
         }
 
-        // Handle live drawing
+        // Live drawing
         if (p.mouseIsPressed) {
+          if (!isDrawing.current) {
+            isDrawing.current = true;
+            currentStroke.current = [];
+          }
+
           const lineData: LineData = {
             x1: p.pmouseX,
             y1: p.pmouseY,
             x2: p.mouseX,
             y2: p.mouseY,
           };
+
+          currentStroke.current.push(lineData);
           p.line(lineData.x1, lineData.y1, lineData.x2, lineData.y2);
-          socket.emit('draw', lineData);
+        } else if (isDrawing.current) {
+          // Stroke finished
+          isDrawing.current = false;
+
+          for (const segment of currentStroke.current) {
+            socket.emit('draw', segment);
+          }
         }
       };
     };
