@@ -18,6 +18,7 @@ export default function P5Sketch() {
 
   const hasDrawnHistory = useRef(false);
   const historyQueueRef = useRef<LineData[]>([]);
+  const isTouching = useRef(false);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -25,6 +26,10 @@ export default function P5Sketch() {
     socketRef.current = socket;
 
     const sketch = (p: p5) => {
+      const isValidCoord = (x: number, y: number) => {
+        return Number.isFinite(x) && Number.isFinite(y) && x >= 0 && y >= 0;
+      };
+
       p.setup = () => {
         const menuHeight = 50;
         const border = 2;
@@ -45,7 +50,7 @@ export default function P5Sketch() {
       p.draw = () => {
         // Replay history incrementally
         if (historyQueueRef.current.length) {
-          const batchSize = 5; // adjust for speed/smoothness
+          const batchSize = 5;
           for (let i = 0; i < batchSize && historyQueueRef.current.length; i++) {
             const data = historyQueueRef.current.shift()!;
             p.line(data.x1, data.y1, data.x2, data.y2);
@@ -53,17 +58,54 @@ export default function P5Sketch() {
         }
 
         // Handle live drawing
-        if (p.mouseIsPressed) {
-          const lineData: LineData = {
-            x1: p.pmouseX,
-            y1: p.pmouseY,
-            x2: p.mouseX,
-            y2: p.mouseY,
-          };
-          p.line(lineData.x1, lineData.y1, lineData.x2, lineData.y2);
-          socket.emit('draw', lineData);
+        if (p.mouseIsPressed || isTouching.current) {
+          if (
+            isValidCoord(p.pmouseX, p.pmouseY) &&
+            isValidCoord(p.mouseX, p.mouseY)
+          ) {
+            const lineData: LineData = {
+              x1: p.pmouseX,
+              y1: p.pmouseY,
+              x2: p.mouseX,
+              y2: p.mouseY,
+            };
+            p.line(lineData.x1, lineData.y1, lineData.x2, lineData.y2);
+            socket.emit('draw', lineData);
+          }
         }
       };
+
+      // 🖊️ explicitly track touch start/end
+      p.touchStarted = () => {
+        isTouching.current = true;
+        return false; // prevent scrolling
+      };
+
+      p.touchEnded = () => {
+        isTouching.current = false;
+        return false; // prevent scrolling
+      };
+
+      // 🎧 Listen for incoming events
+      socket.on("history", (lines: LineData[]) => {
+        if (!p5InstanceRef.current || hasDrawnHistory.current) return;
+
+        hasDrawnHistory.current = true;
+
+        const pInst = p5InstanceRef.current;
+        pInst.background(255);
+
+        historyQueueRef.current = [...lines];
+      });
+
+      socket.on("draw", (data: LineData) => {
+        if (
+          isValidCoord(data.x1, data.y1) &&
+          isValidCoord(data.x2, data.y2)
+        ) {
+          p.line(data.x1, data.y1, data.x2, data.y2);
+        }
+      });
     };
 
     if (container) {
@@ -76,23 +118,6 @@ export default function P5Sketch() {
 
       p5InstanceRef.current = new p5(sketch, container);
     }
-
-    socket.on("history", (lines: LineData[]) => {
-      if (!p5InstanceRef.current || hasDrawnHistory.current) return;
-
-      hasDrawnHistory.current = true;
-
-      const pInst = p5InstanceRef.current;
-      pInst.background(255);
-
-      historyQueueRef.current = [...lines];
-    });
-
-    socket.on("draw", (data: LineData) => {
-      p5InstanceRef.current?.line(
-        data.x1, data.y1, data.x2, data.y2
-      );
-    });
 
     return () => {
       socket.disconnect();
