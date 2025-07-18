@@ -22,7 +22,13 @@ export default function P5Sketch() {
   const isTouching = useRef(false);
   const isNewStroke = useRef(true);
 
-  const [currentTool, setCurrentTool] = useState<'pencil' | 'eraser'>('pencil');
+  const [toolState, setToolState] = useState<'pencil' | 'eraser'>('pencil');
+  const currentTool = useRef<'pencil' | 'eraser'>('pencil');
+
+  // keep currentTool in sync with React state
+  useEffect(() => {
+    currentTool.current = toolState;
+  }, [toolState]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -71,6 +77,7 @@ export default function P5Sketch() {
           }
         }
 
+        // Live drawing
         if (p.mouseIsPressed || isTouching.current) {
           if (isNewStroke.current) {
             if (isValidCoord(p.mouseX, p.mouseY)) {
@@ -84,14 +91,15 @@ export default function P5Sketch() {
             isValidCoord(p.pmouseX, p.pmouseY) &&
             isValidCoord(p.mouseX, p.mouseY)
           ) {
+            const tool = currentTool.current;
             const lineData: LineData = {
               x1: p.pmouseX,
               y1: p.pmouseY,
               x2: p.mouseX,
               y2: p.mouseY,
-              tool: currentTool,
+              tool,
             };
-            applyTool(lineData.tool);
+            applyTool(tool);
             p.line(lineData.x1, lineData.y1, lineData.x2, lineData.y2);
             socket.emit('draw', lineData);
           }
@@ -149,7 +157,7 @@ export default function P5Sketch() {
       p5InstanceRef.current?.remove();
       if (container) container.innerHTML = '';
     };
-  }, [currentTool]); // note: added currentTool to dependencies
+  }, []); // 👈 removed currentTool from deps
 
   return (
     <div
@@ -160,7 +168,7 @@ export default function P5Sketch() {
         flexDirection: 'column',
       }}
     >
-      {/* Menu bar with user count + tool buttons */}
+      {/* Menu bar with tool buttons */}
       <div
         style={{
           height: '50px',
@@ -174,14 +182,14 @@ export default function P5Sketch() {
           fontSize: '16px'
         }}
       >
-        <div>✏️ Collaborative Whiteboard</div>
+        <div>✏️ Room 502</div>
         <div>
           <button
-            onClick={() => setCurrentTool('pencil')}
+            onClick={() => setToolState('pencil')}
             style={{
               marginRight: '0.5rem',
               padding: '0.25rem 0.5rem',
-              background: currentTool === 'pencil' ? '#ccc' : '#fff',
+              background: toolState === 'pencil' ? '#ccc' : '#fff',
               border: '1px solid #999',
               cursor: 'pointer',
             }}
@@ -189,10 +197,10 @@ export default function P5Sketch() {
             Pencil
           </button>
           <button
-            onClick={() => setCurrentTool('eraser')}
+            onClick={() => setToolState('eraser')}
             style={{
               padding: '0.25rem 0.5rem',
-              background: currentTool === 'eraser' ? '#ccc' : '#fff',
+              background: toolState === 'eraser' ? '#ccc' : '#fff',
               border: '1px solid #999',
               cursor: 'pointer',
             }}
@@ -202,7 +210,6 @@ export default function P5Sketch() {
         </div>
       </div>
 
-      {/* Sketch canvas */}
       <div
         ref={containerRef}
         style={{ flex: 1 }}
