@@ -196,7 +196,7 @@ export default function P5Sketch() {
               padding: '0.25rem 0.5rem',
               background: toolState === 'eraser' ? '#ccc' : '#fff',
               border: '1px solid #999',
-              cursor: 'pointer',
+              cursor: 'crosshair',
             }}
           >
             Eraser
