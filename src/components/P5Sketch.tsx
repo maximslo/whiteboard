@@ -162,6 +162,7 @@ export default function P5Sketch() {
         flexDirection: 'column',
       }}
     >
+      {/* Menu bar */}
       <div
         style={{
           height: '50px',
@@ -203,15 +204,19 @@ export default function P5Sketch() {
         </div>
       </div>
 
+      {/* Canvas area */}
       <div
-        ref={containerRef}
         style={{
           flex: 1,
+          background: '#f7f7f7',
           display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
+          alignItems: 'flex-start',
+          justifyContent: 'flex-start',
+          padding: '1rem',
         }}
-      />
+      >
+        <div ref={containerRef} />
+      </div>
     </div>
   );
 }
