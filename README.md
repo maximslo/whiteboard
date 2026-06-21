@@ -1,3 +1,5 @@
+My college apartment had a whiteboard where my roommates and I shared updates, quotes, and other esoteric messages daily in our quadrant. I wanted to recreate that experience online.
+
 next.js + p5.js (vercel) + socket.IO (railway) with firebase FB for persistent drawing history
 
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
