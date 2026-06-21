@@ -1,12 +1,15 @@
-My college apartment had a whiteboard where my roommates and I shared updates, quotes, and other esoteric messages daily in our quadrant. I wanted to recreate that experience online.
+## Lore
+One of my favorite things about my college apartment was our whiteboard.
+
+Originating as a tradition from Sosshouse (est. 2023), we documented our fruitful lives using doodles, quotes, and other esoteric drawings.
+
+I wanted to recreate that experience online.
+
+## Implementation
 
 next.js + p5.js (vercel) + socket.IO (railway) with firebase FB for persistent drawing history
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
-
 ## Getting Started
-
-First, run the development server:
 
 ```bash
 npm run dev
